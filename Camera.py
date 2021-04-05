@@ -49,5 +49,5 @@ class Camera:
         cv2.destroyAllWindows()
 
 
-c = Camera()
-c.run()
+# c = Camera()
+# c.run()
