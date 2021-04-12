@@ -22,11 +22,7 @@ def process_image(img):
                                    11, 2)  # INV for black background
     # Apply Opening to remove white noise spots
     opened = cv2.morphologyEx(binary, cv2.MORPH_OPEN, OPEN_KERNEL)
-    # Apply Dilation to enhance cells for detection
-    # Kernel should catch the grid cells and dilate the board, digits are also dilated as result
-    # dilated = cv2.dilate(opened, ImageProcessor.DILATE_KERNEL) # TODO dilate necessary?
-    processed = opened
-    return processed
+    return opened
 
 
 def extract_board_corners(processed_img):
@@ -104,47 +100,45 @@ def extract_digits(board_img):
     resized = cv2.resize(processed, (processed.shape[0], processed.shape[0]),
                          interpolation=cv2.INTER_AREA)
     pos_y = pos_x = resized.shape[0] // 9
-    grid_len = 10  # depends on the printed grid itself
+    # grid_len = 10  # depends on the printed grid itself
+    grid_zoom = 0.1  # 10%, depends mostly on grid
     board = np.zeros((9, 9))
-    model = load_model('digits_cnn.h5')
+    model = load_model('digits_cnn_v2.h5')
     for i in range(0, 9):
         for j in range(0, 9):
-            # remove white grid lines around cell
-            top, bottom = i * pos_y + grid_len, (i + 1) * pos_y - grid_len
-            left, right = j * pos_x + grid_len, (j + 1) * pos_x - grid_len
+            # get the region of interest - remove white grid lines around cell
+            # i.e., (grid_zoom)% surrounding pixel square around the image
+            border = grid_zoom * i * pos_y
+            top, bottom = i * pos_y + border , (i + 1) * pos_y - border
+            left, right = j * pos_x + border, (j + 1) * pos_x - border
             cell = resized[top: bottom, left: right]
             if is_empty(cell):
                 continue  # leave board[i][j] zero
             digit_img = cell
             # else, apply neural network to image, classify digit and insert to board
-
-            # cell_copy = cell.copy()
-            # contours, _ = cv2.findContours(cell_copy, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            # cnt = contours[0]
-            # x, y, w, h = cv2.boundingRect(cnt)
-            # digit_img = cv2.dilate(digit_img, DILATE_KERNEL)  # TODO I thought dilate would improve but it confuses the model even more
-
-            # while True:
-            #     cv2.imshow('current cell', cell)
-            #     cv2.imshow('current digit', digit_img)
-            #     if cv2.waitKey(1) & 0xFF == ord('q'):
-            #         break
+            digit_img = cv2.dilate(digit_img, DILATE_KERNEL)
+            #     while True:
+            #         cv2.imshow('current cell', cell)
+            #         cv2.imshow('current digit', digit_img)
+            #         if cv2.waitKey(1) & 0xFF == ord('q'):
+            #             break
             digit_img = cv2.resize(digit_img, (28, 28))
             digit_img = np.reshape(digit_img, (1, 28, 28, 1)).astype(np.float32) / 255.0
             board[i][j] = int(model.predict_classes(digit_img))
-            # print(board[i][j])
     return board
 
 
 def extract_board(img):
     processed_orig = process_image(img)
     corners = extract_board_corners(processed_orig)
+    if corners is None:
+        return None
     board_img = perspective_warp(img, corners)
     board = extract_digits(board_img)
     return board
 
 
-sudoku = cv2.imread('sudoku.jpeg')
+sudoku = cv2.imread('sudoku3.jpeg')
 pred_board = extract_board(sudoku)
 real_board = np.array([[9, 0, 0, 0, 0, 0, 3, 0, 0],
                        [0, 0, 0, 5, 2, 0, 0, 0, 8],
@@ -156,6 +150,5 @@ real_board = np.array([[9, 0, 0, 0, 0, 0, 3, 0, 0],
                        [0, 2, 0, 0, 8, 0, 0, 6, 0],
                        [0, 0, 0, 0, 0, 0, 0, 1, 5]])
 compare = (pred_board == real_board)
-print(compare)
-print(np.size(compare) - np.count_nonzero(compare))
-print(pred_board)
+# print(compare)
+# print(pred_board)
