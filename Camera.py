@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-from ImageProcessor import extract_board
+from ImageProcessor import solve_board
+from SudokuSolver import solve
 
 
 class Camera:
@@ -20,29 +21,18 @@ class Camera:
     def run(self):
         while True:
             ret, self._frame = self.cap.read()
-            cv2.imshow('AR Sudoku Solver', self._frame)
-            board = extract_board(self._frame)
-            if board is not None:
-
-            cv2.imshow('warped', warped)
+            solved = solve_board(self._frame)
+            # frame = solved if solved is not None else self._frame
+            # cv2.imshow('AR Sudoku Solver', frame)
+            cv2.imshow("main", self._frame)
+            if solved is not None:
+                cv2.imshow("board", solved)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-        # while True:
-        #     ret, self._frame = self.cap.read()
-        #     processed = self._img_processor.process_image(self._frame)
-        #     # cv2.imshow('AR Sudoku Solver', self._frame)
-        #     cnt = self._img_processor.extract_grid(processed)
-        #     if cnt is not None and cv2.contourArea(cnt) > 10000:
-        #         cv2.drawContours(self._frame, [cnt], 0, (0, ImageProcessor.MAX_INTENSITY, 0), 3)
-        #     cv2.imshow('Original', self._frame)
-        #     cv2.imshow('Processed', processed)
-        #     if cv2.waitKey(1) & 0xFF == ord('q'):
-        #         break
 
     def close(self):
         self.cap.release()
         cv2.destroyAllWindows()
-
-
+#
 # c = Camera()
 # c.run()
