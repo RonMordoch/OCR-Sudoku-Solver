@@ -84,8 +84,8 @@ class NeuralNetwork:
         self.model = tf.keras.models.load_model('digits_cnn_v2.h5')
 
 
-cnn = NeuralNetwork()
 # run once:
+cnn = NeuralNetwork()
 cnn.train_model()
 cnn.load_model()
 cnn.evaluate_model()
