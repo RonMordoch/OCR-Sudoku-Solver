@@ -2,6 +2,8 @@
 
 
 OCR Sudoku Solver.
+Originally intended to be an augmented reality webcam solver, but due to
+university workload and hardware demands I decided to keep it as an OCR solver for images.
 
 Receive an input image:
 ![input](images/inputs/sudoku.jpeg)
