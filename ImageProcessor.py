@@ -142,7 +142,7 @@ def solve_board(img):
     if corners is None:
         return None
     board_img, trans_matrix = perspective_warp(img, corners)
-    inv_trans_matrix = np.linalg.inv(trans_matrix)
+    inv_trans_matrix = np.linalg.inv(trans_matrix)  # inverse transformation matrix for warping
     grid_unsolved = extract_board(board_img)
     grid_solved = SudokuSolver.solve(grid_unsolved)
     solved_img = fill_solution(board_img, grid_unsolved, grid_solved)
